@@ -46,11 +46,18 @@ def ask_claude(user_text):
 
 
 def main():
-    print("Bot started")
+    print("Bot started", flush=True)
+    print("Token check:", tg("getMe"), flush=True)
+    # لو كان في webhook قديم، بيمنع getUpdates
+    tg("deleteWebhook")
     offset = None
     while True:
         try:
             data = tg("getUpdates", offset=offset, timeout=50)
+            if not data.get("ok"):
+                print("TELEGRAM ERROR:", data, flush=True)
+                time.sleep(5)
+                continue
             for upd in data.get("result", []):
                 offset = upd["update_id"] + 1
                 msg = upd.get("message")
@@ -58,6 +65,8 @@ def main():
                     continue
                 chat_id = str(msg["chat"]["id"])
                 text = msg["text"]
+                print(f"GOT MESSAGE from chat_id={chat_id} "
+                      f"(MY_CHAT_ID={MY_CHAT_ID or 'not set'})", flush=True)
 
                 # أول مرة: اعرف الـ chat ID تبعك
                 if not MY_CHAT_ID:
